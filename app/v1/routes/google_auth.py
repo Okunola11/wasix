@@ -15,7 +15,7 @@ google_auth = APIRouter(prefix="/auth", tags=["Authentication"])
 @google_auth.get("/google-login")
 async def google_oauth2(request: Request) -> RedirectResponse:
     """Allows users to login with their google account
-
+    
     Args:
         request (Request): request object 
 
@@ -27,7 +27,6 @@ async def google_oauth2(request: Request) -> RedirectResponse:
     state = secrets.token_urlsafe(16)
     print(f"STATE IS {state}")
     request.session["state"] = state
-    print(f"REQUEST.SESSION.STATE IS {request.session.get("state")}")
     response = await google_oauth.google.authorize_redirect(request, redirect_uri, state=state)
     return response
 
@@ -45,7 +44,6 @@ async def google_oauth2_callback(request: Request, db: Annotated[Session, Depend
     """
     try:
         state_in_session = request.session.get("state")
-        print(f"REQUEST.SESSION == {request.session.get("state")}")
         state_from_params = request.query_params.get("state")
         # verify the state value to prevent CSRF
         if state_in_session != state_from_params: 

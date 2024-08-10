@@ -86,7 +86,7 @@ class GoogleOAuthService(Service):
                     db.add(new_user)
                     db.commit()
 
-                    print(f"GOOGLE ACCESS TOKEN IS {google_response.get("access_token")}")
+                    print(f"GOOGLE ACCESS TOKEN IS {google_response.get('access_token')}")
                     # oauth data 
                     oauth_data = OAuth(
                         user_id=new_user.id,
