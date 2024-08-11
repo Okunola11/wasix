@@ -12,7 +12,7 @@ from app.v1.services.google_oauth import GoogleOAuthService
 
 google_auth = APIRouter(prefix="/auth", tags=["Authentication"])
 
-@google_auth.get("/google-login")
+@google_auth.get("/google")
 async def google_oauth2(request: Request) -> RedirectResponse:
     """Allows users to login with their google account
     
