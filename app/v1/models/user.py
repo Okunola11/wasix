@@ -22,5 +22,11 @@ class User(BaseTableModel):
         obj_dict.pop("password")
         return obj_dict
 
+    def get_context_string(self, context: str):
+        """
+        Generates a unique context string for a user
+        """
+        return f"{context}{self.password[-6:]}{self.updated_at.strftime('%m%d%Y%H%M%S')}".strip()
+
     def __str__(self):
         return self.email
