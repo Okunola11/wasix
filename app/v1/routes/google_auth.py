@@ -7,7 +7,7 @@ from authlib.oauth2.rfc6749 import OAuth2Token
 import secrets
 
 from app.db.database import get_db
-from app.core.dependencies.google_oauth_config import google_oauth
+from app.core.config.google_oauth_config import google_oauth
 from app.v1.services.google_oauth import GoogleOAuthService
 
 google_auth = APIRouter(prefix="/auth", tags=["Authentication"])
