@@ -10,13 +10,13 @@ conf = ConnectionConfig(
     MAIL_PORT=settings.MAIL_PORT,
     MAIL_SERVER=settings.MAIL_SERVER,
     MAIL_STARTTLS=False,
-    MAIL_SSL_TLS=False,
+    MAIL_SSL_TLS=True,
     MAIL_DEBUG=True,
     VALIDATE_CERTS=True,
     MAIL_FROM=settings.MAIL_FROM,
     MAIL_FROM_NAME=settings.MAIL_FROM_NAME,
     TEMPLATE_FOLDER=Path(__file__).parent.parent / "templates",
-    USER_CREDENTIALS=True
+    USE_CREDENTIALS=True
 )
 
 fm = FastMail(conf)
