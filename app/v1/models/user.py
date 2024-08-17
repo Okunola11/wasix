@@ -30,3 +30,14 @@ class User(BaseTableModel):
 
     def __str__(self):
         return self.email
+
+
+class UserToken(BaseTableModel):
+    __tablename__ = "user_tokens"
+
+    user_id = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    access_key = Column(String(250), nullable=True, index=True, default=None)
+    refresh_key = Column(String(250), nullable=True, index=True, default=None)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+
+    user = relationship("User", back_populates="tokens")
