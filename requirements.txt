@@ -29,6 +29,7 @@ markdown-it-py==3.0.0
 MarkupSafe==2.1.5
 mdurl==0.1.2
 packaging==24.1
+passlib==1.7.4
 pluggy==1.5.0
 psycopg2-binary==2.9.9
 pycparser==2.22
@@ -36,6 +37,7 @@ pydantic==2.8.2
 pydantic-settings==2.3.4
 pydantic_core==2.20.1
 Pygments==2.18.0
+PyJWT==2.9.0
 pytest==8.3.2
 python-decouple==3.8
 python-dotenv==1.0.1
