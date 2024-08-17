@@ -5,9 +5,9 @@ def success_response(status_code: int, message: str, data: Optional[dict] = None
     """Success response model
 
     Args:
-        status_code (int): The status code to be returned
-        message (str): Success message to be sent
-        data (Optional[dict], optional): Data to be returned if availbale. Defaults to None.
+        - status_code (int): The status code to be returned
+        - message (str): Success message to be sent
+        - data (Optional[dict], optional): Data to be returned if availbale. Defaults to None.
 
     Returns:
         dict: response data
