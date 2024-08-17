@@ -78,7 +78,7 @@ async def validation_exception(request: Request, exc: RequestValidationError):
 
     errors = [
         {"loc": error["loc"], "msg": error["msg"], "type": error["type"]}
-        for error in exc.errors
+        for error in exc.errors()
     ]
 
     return JSONResponse(
