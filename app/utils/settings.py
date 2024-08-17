@@ -27,11 +27,11 @@ class Settings(BaseSettings):
 
     MAIL_USERNAME: str = config("MAIL_USERNAME")
     MAIL_PASSWORD: str = config("MAIL_PASSWORD")
-    MAIL_PORT: int = config("MAIL_PORT", 1025)
-    MAIL_SERVER: str = config("MAIL_SERVER", "smtp")
-    MAIL_FROM: str = config("MAIL_FROM", "noreply@test.com")
+    MAIL_PORT: int = config("MAIL_PORT", default=1025)
+    MAIL_SERVER: str = config("MAIL_SERVER", default="smtp")
+    MAIL_FROM: str = config("MAIL_FROM", default="noreply@test.com")
     MAIL_FROM_NAME: str = config("MAIL_FROM_NAME")
 
-    FRONTEND_URL: str = config("FRONTEND_URL")
+    FRONTEND_URL: str = config("FRONTEND_URL", default="http:localhost:3000")
 
 settings = Settings()
