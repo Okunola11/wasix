@@ -161,7 +161,7 @@ class UserService(Service):
 
         user = await load_user(data.email, db)
         if not user:
-            raise HTTPException(status_code=400, detail="Email is not registered with us")
+            raise HTTPException(status_code=400, detail="Invalid request!")
 
         if not verify_password(data.password, user.password):
             raise HTTPException(status_code=400, detail="Incorrect email or password")
