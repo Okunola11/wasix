@@ -1,4 +1,4 @@
-from fastapi import HTTPException, Response
+from fastapi import HTTPException, Response, status
 from sqlalchemy.orm import Session, joinedload
 from datetime import datetime, timedelta
 
@@ -62,7 +62,9 @@ class UserService(Service):
             )
 
             # create a response object
-            response = Response(content=pydantic_model.json(), media_type='application/json')
+            response = Response(
+                content=pydantic_model.json(), status_code=status.HTTP_201_CREATED, media_type='application/json'
+                )
 
             # sending the refresh token as a cookie
             response.set_cookie(
@@ -192,7 +194,9 @@ class UserService(Service):
         )
 
         # create a response object
-        response = Response(content=pydantic_model.json(), media_type='application/json')
+        response = Response(
+            content=pydantic_model.json(), status_code=status.HTTP_200_OK, media_type='application/json'
+            )
 
         response.set_cookie(
             key="refresh_token",
@@ -250,7 +254,9 @@ class UserService(Service):
         )
 
         # create a response object
-        response = Response(content=pydantic_model.json(), media_type='application/json')
+        response = Response(
+            content=pydantic_model.json(), status_code=status.HTTP_200_OK, media_type='application/json'
+            )
 
         response.set_cookie(
             key="refresh_token",
