@@ -30,7 +30,7 @@ class SendAccountActivationConfirmationEmail(BaseEmailSender):
 
 class SendPasswordResetEmail(BaseEmailSender):
     async def send(self, user: User, background_tasks: BackgroundTasks):
-        string_context = f"{self.user.get_context_string(FORGOT_PASSWORD)}"
+        string_context = f"{user.get_context_string(FORGOT_PASSWORD)}"
         token = hash_password(string_context) # hashed token
         reset_url = f"{self.fronted_host}/reset-password?token={token}&email={user.email}"
         data = {
