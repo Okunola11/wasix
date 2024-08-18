@@ -77,7 +77,6 @@ class GoogleOAuthService(Service):
                     # link the user to the associated oauth_data
                     print(f"Creating new USER")
                     new_user = User(
-                        username=user_info.get("email"),
                         first_name=user_info.get("given_name"),
                         last_name=user_info.get("family_name"),
                         email=user_info.get("email")

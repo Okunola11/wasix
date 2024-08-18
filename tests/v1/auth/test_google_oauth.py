@@ -4,7 +4,7 @@ from starlette.responses import RedirectResponse
 
 from app.v1.models.user import User
 from app.v1.models.oauth import OAuth
-from app.core.dependencies.google_oauth_config import google_oauth
+from app.core.config.google_oauth_config import google_oauth
 
 return_value = {
     'access_token': 'zz-some-random-token', 

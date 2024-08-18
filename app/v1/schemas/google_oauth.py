@@ -6,7 +6,6 @@ class UserData(BaseModel):
     Schema response for validated google login
     """
     id: str
-    username: str 
     first_name: str
     last_name: str 
     email: EmailStr
