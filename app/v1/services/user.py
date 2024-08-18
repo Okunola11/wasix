@@ -337,13 +337,14 @@ class UserService(Service):
         """
 
         user = await load_user(data.email, db)
-        if not user.verified_at:
-            raise HTTPException(status_code=400, detail="Your account is not verified. Please check your email inbox to verify your account.")
+        if user:
+            if not user.verified_at:
+                raise HTTPException(status_code=400, detail="Your account is not verified. Please check your email inbox to verify your account.")
 
-        if not user.is_active:
-            raise HTTPException(status_code=400, detail="Your account has been deactivated. Please contact support.")
+            if not user.is_active:
+                raise HTTPException(status_code=400, detail="Your account has been deactivated. Please contact support.")
 
-        await password_reset_email.send(user, background_tasks)
+            await password_reset_email.send(user, background_tasks)
 
         return success_response(
             status_code=200,
