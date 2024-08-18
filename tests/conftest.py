@@ -1,6 +1,7 @@
 import sys
 import os
 from typing import Generator
+from datetime import datetime
 
 import pytest
 from sqlalchemy import create_engine
@@ -10,6 +11,9 @@ from starlette.testclient import TestClient
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from main import app
+from app.core.config.email import fm
+from app.v1.services.user import user_service
+from app.core.config.security import hash_password
 from app.db.database import Base, get_db
 from app.v1.models.user import User
 
@@ -46,34 +50,36 @@ def client(app_test, test_session):
             pass
 
     app_test.dependency_overrides[get_db] = _test_db
+    fm.config.SUPPRESS_SEND = 1
     return TestClient(app_test)
 
-# @pytest.fixture(scope="function")
-# def auth_client(app_test, test_session, user):
-#     def _test_db():
-#         try:
-#             yield test_session
-#         finally:
-#             pass
+@pytest.fixture(scope="function")
+def auth_client(app_test, test_session, user):
+    def _test_db():
+        try:
+            yield test_session
+        finally:
+            pass
 
-#     app_test.dependency_overrides[get_db] = _test_db
-#     data = _generate_tokens(user, test_session)
-#     client = TestClient(app_test)
-#     client.headers['Authorization'] = f"Bearer {data['access_token']}"
-#     return client
+    app_test.dependency_overrides[get_db] = _test_db
+    fm.config.SUPPRESS_SEND = 1
+    data = user_service._generate_tokens(user, test_session)
+    client = TestClient(app_test)
+    client.headers['Authorization'] = f"Bearer {data['access_token']}"
+    return client
 
 
 @pytest.fixture(scope="function")
 def inactive_user(test_session):
     inactive_user = User(
         email="inactive@example.com",
-        password=USER_PASSWORD,
+        password=hash_password(USER_PASSWORD),
         first_name=USER_FIRSTNAME,
         last_name=USER_LASTNAME,
         is_active=False,
         is_admin=False,
         is_deleted=False,
-        is_verified=True,
+        verified_at=datetime(2024, 8, 10, 20, 55, 38, 36834)
     )
     test_session.add(inactive_user)
     test_session.commit()
@@ -84,13 +90,13 @@ def inactive_user(test_session):
 def user(test_session):
     user = User(
         email="user@example.com",
-        password=USER_PASSWORD,
+        password=hash_password(USER_PASSWORD),
         first_name=USER_FIRSTNAME,
         last_name=USER_LASTNAME,
         is_active=True,
         is_admin=False,
         is_deleted=False,
-        is_verified=True,
+        verified_at=datetime(2024, 8, 10, 20, 55, 38, 36834)
     )
     test_session.add(user)
     test_session.commit()
@@ -101,13 +107,27 @@ def user(test_session):
 def admin_user(test_session):
     admin_user = User(
         email="admin@example.com",
-        password=USER_PASSWORD,
+        password=hash_password(USER_PASSWORD),
         first_name=USER_FIRSTNAME,
         last_name=USER_LASTNAME,
         is_active=True,
         is_admin=True,
+        verified_at=datetime(2024, 8, 10, 20, 55, 38, 36834)
     )
     test_session.add(admin_user)
     test_session.commit()
     test_session.refresh(admin_user)
     return admin_user
+
+@pytest.fixture(scope="function")
+def unverified_user(test_session):
+    unverified_user = User(
+        email="unverified@gmail.com",
+        password=hash_password(USER_PASSWORD),
+        first_name=USER_FIRSTNAME,
+        last_name=USER_LASTNAME
+    )
+    test_session.add(unverified_user)
+    test_session.commit()
+    test_session.refresh(unverified_user)
+    return unverified_user
