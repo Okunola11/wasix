@@ -28,6 +28,9 @@ class RegisterUserRequest(BaseModel):
 
         password = values.get('password')
 
+        if password is None or password == '':
+            raise ValueError("password is required")
+
         if not any(v.islower() for v in password):
             raise ValueError("password must include at least one lowercase character")
         if not any(v.isupper() for v in password):
@@ -65,6 +68,9 @@ class ResetRequest(BaseModel):
         """Function to validate password"""
 
         password = values.get('password')
+
+        if password is None or password == '':
+            raise ValueError("password is required")
 
         if not any(v.islower() for v in password):
             raise ValueError("password must include at least one lowercase character")
