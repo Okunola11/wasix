@@ -11,7 +11,7 @@ from app.v1.schemas.user import (
     RegisterUserRequest,  VerifyUserRequest, EmailRequest, ResetRequest, LoginRequest
 )
 from app.v1.responses.user import (
-    RegisterUserResponse, UserLoginResponse, RefreshTokenResponse, UserResponseData
+    RegisterUserResponse, UserLoginResponse, RefreshTokenResponse
     )
 
 auth = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -124,7 +124,3 @@ async def reset_password(
     """
 
     return await user_service.reset_user_password(data, db)
-
-@auth.get("/me", status_code=status.HTTP_200_OK, response_model=UserResponseData)
-async def fetch_user(user: Annotated[User, Depends(get_current_user)]):
-    return user

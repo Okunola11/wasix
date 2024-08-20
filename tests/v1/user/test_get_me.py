@@ -1,10 +1,10 @@
 """ 
-- Only authenticated users should be able to fetch the users details
+- Authenticated users should be able to fetch their own details
 """
 
 from app.v1.services.user import user_service
 
-base_url = "/api/v1/auth/me"
+base_url = "/api/v1/users/me"
 
 def test_fetch_me(client, user, test_session):
     data = user_service._generate_tokens(user, test_session)
@@ -13,7 +13,7 @@ def test_fetch_me(client, user, test_session):
     }
     response = client.get(f"{base_url}", headers=headers)
     assert response.status_code == 200
-    assert response.json()['email'] == user.email
+    assert response.json()['data']['email'] == user.email
 
 def test_fetch_me_with_invalid_token(client, user, test_session):
     data = user_service._generate_tokens(user, test_session)

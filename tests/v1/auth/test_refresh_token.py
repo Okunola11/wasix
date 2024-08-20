@@ -17,6 +17,7 @@ def test_refresh_token(client, user, test_session):
     assert response.status_code == 200
     assert 'access_token' in response.json()
     assert 'refresh_token' in response.cookies
+    assert response.json()['data'] == {}
 
 def test_refresh_with_invalid_token(client, user, test_session):
     cookies = {

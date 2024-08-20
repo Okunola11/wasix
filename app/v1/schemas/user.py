@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Optional
 from pydantic import BaseModel, EmailStr, StringConstraints, model_validator
 
 class RegisterUserRequest(BaseModel):
@@ -55,9 +55,13 @@ class VerifyUserRequest(BaseModel):
     email: EmailStr
 
 class EmailRequest(BaseModel):
+    """Email request schema"""
+
     email: EmailStr
 
 class ResetRequest(BaseModel):
+    """Password request schema"""
+
     token: str
     email: EmailStr
     password: str
@@ -82,3 +86,10 @@ class ResetRequest(BaseModel):
             raise ValueError("password must include at least one special character")
 
         return values
+
+class UpdateUserRequest(BaseModel):
+    """User data update request schema"""
+
+    first_name: Annotated[str, Optional] = None
+    last_name: Annotated[str, Optional] = None
+    email: Annotated[EmailStr, Optional] = None
