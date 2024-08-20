@@ -28,3 +28,25 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: An
         return user
 
     raise HTTPException(status_code=401, detail="Not authorized")
+
+async def get_current_superadmin(token: Annotated[str, Depends(oauth2_scheme)], db: Annotated[Session, Depends(get_db)]):
+    """Checks if the current authenticated user is a superadmin
+
+    Args:
+        - token: the users access token
+        - db: the database session
+
+    Raises:
+        - HTTPException: 401 is the user is not authenticated
+        - HTTPException: 403 if the authenticated user is not a superadmin
+
+    Returns:
+        dict: the current user obj if successful
+    """
+    
+    user = await get_current_user(token, db)
+
+    if user.is_superadmin:
+        return user
+
+    raise HTTPException(status_code=403, detail="You do not have permission!")
