@@ -1,7 +1,7 @@
 from typing import Optional
 from fastapi.responses import JSONResponse
 
-def success_response(status_code: int, message: str, data: Optional[dict] = None) -> dict:
+def success_response(status_code: int = 200, message: str = "", data: Optional[dict] = None) -> dict:
     """Success response model
 
     Args:
