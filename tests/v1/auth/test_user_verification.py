@@ -22,6 +22,7 @@ def test_user_account_verification(client, unverified_user, test_session):
     response = client.post(f"{base_url}", json=data)
     assert response.status_code == 200
     activated_user = test_session.query(User).filter_by(email = unverified_user.email).first()
+    assert activated_user.is_verified == True
     assert activated_user.is_active == True
     assert activated_user.verified_at is not None
 
