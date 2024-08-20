@@ -1,6 +1,7 @@
 from fastapi import HTTPException, Response, status
 from sqlalchemy.orm import Session, joinedload
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from typing import Annotated, Optional, Any
 
 from app.v1.models.user import User, UserToken
 from app.core.base.services import Service
@@ -8,6 +9,7 @@ from app.utils.email_context import FORGOT_PASSWORD, USER_VERIFY_ACCOUNT
 from app.utils.settings import settings
 from app.utils.logger import logger
 from app.utils.string import unique_string
+from app.utils.db_validators import check_model_existence
 from app.core.config.security import (
     hash_password, verify_password, str_encode, str_decode, generate_token,
     load_user, get_token_payload
@@ -17,7 +19,11 @@ from app.v1.services.email import (
     account_activation_confirmation_email, 
     password_reset_email
     )
-from app.v1.responses.user import UserResponseData, RegisterUserResponse, UserLoginResponse, RefreshTokenResponse
+from app.v1.responses.user import (
+    UserResponseData, RegisterUserResponse, UserLoginResponse, FetchUserResponse,
+    RefreshTokenResponse, SuperAdminFetchUserResponse, SuperAdminUserResponseData,
+    FetchAllUsersResponse
+    )
 from app.utils.success_response import success_response
 
 class UserService(Service):
@@ -80,18 +86,173 @@ class UserService(Service):
             db.rollback()
             raise HTTPException(status_code=500, detail=f"Error {exc}")
 
-    def fetch(self):
-        pass
+    def fetch(self, db: Session, id):
+        """Fetches all data of a single user
 
-    def fetch_all(self):
-        pass
+        Args:
+            - db: the database session
+            - id: unique id of the user to fetch
 
-    def update(self):
-        pass
+        Raises:
+            - HTTPException: 404 for non-existing request id
+            - HTTPException: 500 for any other error
 
-    def delete(self):
-        pass
+        Returns:
+            dict: the user object
+        """
 
+        user = check_model_existence(db, User, id)
+
+        user_data = SuperAdminUserResponseData.model_validate(user)
+
+        response = SuperAdminFetchUserResponse(
+            message="Successfully fetched user",
+            data=user_data
+        )
+        return response
+
+    def fetch_me(self, user: User):
+        """Fetch the current authenticated users details
+
+        Args:
+            user: the current user obj
+
+        Returns:
+            dict: success response with the current user obj
+        """
+
+        user_data = UserResponseData.model_validate(user)
+
+        response = FetchUserResponse(
+            message="Successfully fetched user",
+            data=user_data
+        )
+        return response
+
+
+    def fetch_all(self, db: Session, page: int, per_page: int, **query_params: Optional[Any]):
+
+        # Creating filters for the query
+        filters = []
+        for key, value in query_params.items():
+            if (value is not None) and (not isinstance(value, bool)):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, 
+                    detail=f"Invalid value for '{key}'. Must be a boolean" 
+                    )
+
+            # create the query condition
+            if hasattr(User, key) and value is not None:
+                filters.append(getattr(User, key) == value)
+        
+        offset_value = (page - 1) * per_page
+        users = db.query(User).filter(*filters).limit(per_page).offset(offset_value).all()
+
+        total_users = len(users)
+        if total_users:
+            all_user_data = [SuperAdminUserResponseData.model_validate(user, from_attributes=True) for user in users]
+
+            response = FetchAllUsersResponse(
+                message="Successfully fetched all users",
+                page=page,
+                per_page=per_page,
+                total=total_users,
+                data=all_user_data
+            )
+            return response
+        response = FetchAllUsersResponse(
+            message="No User(s) found",
+            page=page,
+            per_page=per_page,
+            total=0,
+            data=[]
+        )
+        return response
+        
+
+    def update(self, db: Session, current_user: User, data, id: Annotated[str, Optional] = None):
+        """Updates a single user
+
+        Args:
+            - db: the database session
+            - current_user: the current authenticated user
+            - data: the update request data
+            - id: request id. Defaults to None.
+
+        Raises:
+            - HTTPException: 400 for already existing request email
+            - HTTPException: 404 for non existing user
+            - HTTPException: 400 for deleted user
+            - HTTPException: 400 for inactive user
+            - HTTPException: 400 for unverified user
+            - HTTPException: 400 for request id which doesn't belong to current user who is not a superadmin
+
+        Returns:
+            dict: updated user obj
+        """
+
+        if (not id) or (id and current_user.id == id) or current_user.is_superadmin:
+            # check for existing email
+            existing_email = db.query(User).filter_by(email=data.email).first()
+            if existing_email:
+                raise HTTPException(status_code=400, detail="Email already taken")
+
+            user = current_user
+            if (id and current_user.is_superadmin):
+                user = check_model_existence(db, User, id)
+
+            # check if user is deleted, inactive or unverified
+            if user.is_deleted:
+                raise HTTPException(status_code=400, detail="User is deleted and cannot be updated")
+
+            if not user.is_verified:
+                raise HTTPException(status_code=400, detail="User is not verified and cannot be updated")
+
+            if not user.is_active:
+                raise HTTPException(status_code=400, detail="User is inactive and cannot be updated")
+
+            update_data = data.dict(exclude_unset=True)
+            for key, value in update_data.items():
+                setattr(user, key, value)
+            db.commit()
+            db.refresh(user)
+
+            user_data = UserResponseData.model_validate(user)
+
+            response = FetchUserResponse(
+                message="User updated successfully",
+                data=user_data
+            )
+            return response
+        raise HTTPException(status_code=400, detail="Invalid request!")
+
+    def delete(self, db: Session, current_user: User, id: str):
+        """Soft delete a user
+
+        Args:
+            - db: the database session
+            - current_user: the current authenticated superadmin
+            - id: the ID of the user to delete
+
+        Raises:
+            - HTTPException: 409 for already deleted users
+            - HTTPException: 400 for requests by non superadmin whose request ID do not match their ID
+        """
+
+        if current_user.is_superadmin:
+            user = check_model_existence(db, User, id)
+
+            # check if user is deleted
+            if user.is_deleted:
+                raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User is already deleted")
+
+            # soft delete user
+            user.is_active = False
+            user.is_deleted = True
+            user.deleted_at = datetime.now(timezone.utc)
+            db.commit()
+        else:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid request!")
 
     async def activate_user_account(self, data, db: Session, background_tasks):
         """Verifies a registered user
@@ -125,6 +286,7 @@ class UserService(Service):
 
         try:
             user.is_active = True
+            user.is_verified = True
             user.updated_at = datetime.utcnow()
             user.verified_at = datetime.utcnow()
             db.add(user)
@@ -250,7 +412,7 @@ class UserService(Service):
 
         pydantic_model = RefreshTokenResponse(
             message="Refresh successful",
-            access_token=tokens['access_token']
+            access_token=tokens['access_token'],
         )
 
         # create a response object
