@@ -1,7 +1,7 @@
 import sys
 import os
 from typing import Generator
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pytest
 from sqlalchemy import create_engine
@@ -77,9 +77,10 @@ def inactive_user(test_session):
         first_name=USER_FIRSTNAME,
         last_name=USER_LASTNAME,
         is_active=False,
-        is_admin=False,
+        is_verified=True,
+        is_superadmin=False,
         is_deleted=False,
-        verified_at=datetime(2024, 8, 10, 20, 55, 38, 36834)
+        verified_at=datetime.now(timezone.utc)
     )
     test_session.add(inactive_user)
     test_session.commit()
@@ -94,9 +95,10 @@ def user(test_session):
         first_name=USER_FIRSTNAME,
         last_name=USER_LASTNAME,
         is_active=True,
-        is_admin=False,
+        is_superadmin=False,
         is_deleted=False,
-        verified_at=datetime(2024, 8, 10, 20, 55, 38, 36834)
+        is_verified=True,
+        verified_at=datetime.now(timezone.utc)
     )
     test_session.add(user)
     test_session.commit()
@@ -104,20 +106,21 @@ def user(test_session):
     return user
 
 @pytest.fixture(scope="function")
-def admin_user(test_session):
-    admin_user = User(
+def superadmin(test_session):
+    superadmin = User(
         email="admin@example.com",
         password=hash_password(USER_PASSWORD),
         first_name=USER_FIRSTNAME,
         last_name=USER_LASTNAME,
         is_active=True,
-        is_admin=True,
-        verified_at=datetime(2024, 8, 10, 20, 55, 38, 36834)
+        is_verified=True,
+        is_superadmin=True,
+        verified_at=datetime.now(timezone.utc)
     )
-    test_session.add(admin_user)
+    test_session.add(superadmin)
     test_session.commit()
-    test_session.refresh(admin_user)
-    return admin_user
+    test_session.refresh(superadmin)
+    return superadmin
 
 @pytest.fixture(scope="function")
 def unverified_user(test_session):
@@ -131,3 +134,17 @@ def unverified_user(test_session):
     test_session.commit()
     test_session.refresh(unverified_user)
     return unverified_user
+
+@pytest.fixture(scope="function")
+def deleted_user(test_session):
+    deleted_user = User(
+        email="deleted@gmail.com",
+        password=hash_password(USER_PASSWORD),
+        first_name=USER_FIRSTNAME,
+        last_name=USER_LASTNAME,
+        is_deleted=True
+    )
+    test_session.add(deleted_user)
+    test_session.commit()
+    test_session.refresh(deleted_user)
+    return deleted_user
